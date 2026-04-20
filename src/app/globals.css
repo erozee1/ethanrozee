@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #EEEFE9;
+  --bg-card: #E8E9E2;
+  --bg-hover: #E2E3DB;
+  --border: #D0D1C9;
+  --border-strong: #B8B9B1;
+  --text-primary: #151515;
+  --text-secondary: #5A5B54;
+  --text-muted: #8A8B84;
+  --accent-blue: #1D4AFF;
+  --accent-red: #F54E00;
+  --accent-green: #3FB950;
+  --accent-yellow: #F1A82C;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  color: var(--text-primary);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Contribution graph cells */
+.contrib-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.contrib-cell[data-level="1"] { background: #9BE9A8; border-color: #9BE9A8; }
+.contrib-cell[data-level="2"] { background: #40C463; border-color: #40C463; }
+.contrib-cell[data-level="3"] { background: #30A14E; border-color: #30A14E; }
+.contrib-cell[data-level="4"] { background: #216E39; border-color: #216E39; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Selection */
+::selection { background: rgba(29, 74, 255, 0.15); color: var(--text-primary); }
