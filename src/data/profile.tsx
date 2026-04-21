@@ -15,7 +15,7 @@ export const socialLinks: SocialLink[] = [
   },
   {
     label: "LinkedIn",
-    href: "https://linkedin.com/in/ethan-rozee",
+    href: "https://www.linkedin.com/in/ethan-rozee-965997216/",
     icon: <LinkedInIcon />,
   },
   {
