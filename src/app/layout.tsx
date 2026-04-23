@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Nav from "@/components/Nav";
+import { siteUrl } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,12 +16,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Ethan Rozee",
   description: "Aerospace MEng · Builder · Founder — exploring the intersection of engineering and AI.",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Ethan Rozee",
     description: "Aerospace MEng · Builder · Founder",
     type: "website",
+    url: "/",
   },
 };
 
