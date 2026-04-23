@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Nav from "@/components/Nav";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
         <footer className="border-t py-6 px-6 text-center text-xs" style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}>
           <span>© {new Date().getFullYear()} Ethan Rozee · Built with Next.js</span>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
