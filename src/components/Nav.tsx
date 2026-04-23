@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { navLinks } from "@/data/nav";
@@ -21,12 +22,14 @@ export default function Nav() {
           className="flex items-center gap-2 text-sm font-semibold tracking-tight"
           style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
         >
-          <span
-            className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-            style={{ background: "var(--text-primary)", color: "var(--bg)" }}
-          >
-            e
-          </span>
+          <Image
+            src="/image.png"
+            alt="Ethan Rozee logo"
+            width={20}
+            height={20}
+            className="w-5 h-5 rounded-sm"
+            priority
+          />
           erozee1
         </Link>
 
