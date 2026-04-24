@@ -1,5 +1,7 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
+
 import type { ContribData } from "@/lib/github";
 
 // Seeded PRNG fallback — shown when GITHUB_TOKEN is not set
@@ -30,6 +32,8 @@ interface Props {
 }
 
 export default function ContribGraph({ data }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const cells: number[][] = data
     ? data.weeks.map((week) => week.map((d) => d.level))
     : buildFallbackCells();
@@ -53,6 +57,16 @@ export default function ContribGraph({ data }: Props) {
 
   const dayLabels = ["Mon", "", "Wed", "", "Fri", "", ""];
 
+  useLayoutEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth;
+    if (maxScrollLeft > 0) {
+      scroller.scrollLeft = maxScrollLeft;
+    }
+  }, []);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -61,7 +75,7 @@ export default function ContribGraph({ data }: Props) {
         </span>
       </div>
 
-      <div className="overflow-x-auto pb-1">
+      <div ref={scrollRef} className="overflow-x-auto pb-1">
         <div style={{ minWidth: "660px" }}>
           {/* Month labels */}
           <div className="flex mb-1 ml-8">
