@@ -1,9 +1,24 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { badges, socialLinks } from "@/data/profile";
 
 export default function ProfileSidebar() {
+  const email = "ethanrozee01@gmail.com";
+  const [copyLabel, setCopyLabel] = useState("Click to copy");
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopyLabel("Copied");
+      window.setTimeout(() => setCopyLabel("Click to copy"), 2000);
+    } catch {
+      setCopyLabel("Copy failed");
+      window.setTimeout(() => setCopyLabel("Click to copy"), 2000);
+    }
+  };
+
   return (
     <aside className="md:w-64 shrink-0">
       <div className="mb-5">
@@ -41,8 +56,39 @@ export default function ProfileSidebar() {
         An Aerospace MEng student trying to find the problem to work on.
       </p>
 
+      <button
+        type="button"
+        className="w-full text-left py-2 px-4 rounded-lg border mb-3 transition-colors"
+        style={{
+          borderColor: "var(--border-strong)",
+          color: "var(--text-primary)",
+          background: "var(--bg-card)",
+        }}
+        onClick={handleCopyEmail}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.background = "var(--bg-hover)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.background = "var(--bg-card)";
+        }}
+        aria-label={`Copy ${email} to clipboard`}
+      >
+        <span
+          className="block text-[11px] uppercase tracking-[0.18em]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Email
+        </span>
+        <span className="block text-sm mt-1" style={{ fontFamily: "var(--font-geist-mono)" }}>
+          {email}
+        </span>
+        <span className="block text-xs mt-1" style={{ color: "var(--text-muted)" }} aria-live="polite">
+          {copyLabel}
+        </span>
+      </button>
+
       <a
-        href="mailto:ethanrozee01@gmail.com"
+        href={`mailto:${email}`}
         className="block w-full text-center text-sm font-medium py-1.5 px-4 rounded-lg border mb-5 transition-colors"
         style={{
           borderColor: "var(--border-strong)",
