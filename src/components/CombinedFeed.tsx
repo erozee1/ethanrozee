@@ -741,10 +741,11 @@ export default function CombinedFeed({
     .sort((a, b) => monthToSortKey(b[0]) - monthToSortKey(a[0]))
     .map(([month, entries]) => ({ month, entries }));
 
-  // Anchor months: the most recent month containing each content type.
-  // These are always shown regardless of how long ago they occurred.
+  // Anchor months: always-visible months.
+  // GitHub: ALL activity months are anchors (users expect their full recent history).
+  // Everything else: only the most recent month of each type is an anchor.
   const anchorMonths = new Set<string>();
-  if (activityGroups[0]) anchorMonths.add(activityGroups[0].month);
+  for (const group of activityGroups) anchorMonths.add(group.month);
   if (articles[0]) anchorMonths.add(toMonthLabel(articles[0].date));
   if (publications[0]) anchorMonths.add(toMonthLabel(publications[0].date));
   if (linkedInPosts[0]) anchorMonths.add(toMonthLabel(linkedInPosts[0].date));
