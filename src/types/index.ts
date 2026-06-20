@@ -1,3 +1,9 @@
+export interface WorkItemTag {
+  label: string;
+  color: string;
+  stars?: number;
+}
+
 export interface WorkItem {
   id: string;
   name: string;
@@ -7,6 +13,7 @@ export interface WorkItem {
   stars?: number;
   href?: string;
   updatedAt: string; // ISO date string — controls sort order and "4 most recent" default
+  tags?: WorkItemTag[];
 }
 
 /** @deprecated use WorkItem */

@@ -10,6 +10,7 @@ export default function ProjectCard({
   categoryColor,
   stars = 0,
   href,
+  tags,
 }: WorkItem) {
   const Wrapper = href ? "a" : "div";
 
@@ -53,21 +54,41 @@ export default function ProjectCard({
         {description}
       </p>
 
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: categoryColor }} />
-          <span className="text-xs" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
-            {category}
-          </span>
-        </div>
-
-        {stars > 0 && (
-          <div className="flex items-center gap-1" style={{ color: "var(--text-muted)" }}>
-            <StarIcon />
-            <span className="text-xs" style={{ fontFamily: "var(--font-geist-mono)" }}>
-              {stars}
-            </span>
-          </div>
+      <div className="flex items-center gap-5 flex-wrap">
+        {tags ? (
+          tags.map((tag) => (
+            <div key={tag.label} className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: tag.color }} />
+              <span className="text-xs" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
+                {tag.label}
+              </span>
+              {tag.stars != null && tag.stars > 0 && (
+                <div className="flex items-center gap-1" style={{ color: "var(--text-muted)" }}>
+                  <StarIcon />
+                  <span className="text-xs" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                    {tag.stars}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: categoryColor }} />
+              <span className="text-xs" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
+                {category}
+              </span>
+            </div>
+            {stars > 0 && (
+              <div className="flex items-center gap-1" style={{ color: "var(--text-muted)" }}>
+                <StarIcon />
+                <span className="text-xs" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                  {stars}
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Wrapper>
