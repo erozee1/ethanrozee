@@ -39,6 +39,12 @@ type Entry =
   | { kind: "linkedin"; post: LinkedInPost }
   | { kind: "manual"; post: ManualPost };
 
+type MonthData = { month: string; entries: Entry[] };
+
+type DisplayItem =
+  | { kind: "anchor"; data: MonthData }
+  | { kind: "gap"; months: MonthData[]; id: number };
+
 // ── collapsed month summary ───────────────────────────────────────────────────
 
 function CollapsedSummary({ entries }: { entries: Entry[] }) {
@@ -367,9 +373,27 @@ function ManualPostEntry({ post }: { post: ManualPost }) {
           </span>
         </div>
         <div className="px-4 py-3 flex items-start gap-3" style={{ background: "var(--bg)" }}>
-          <p className="flex-1 text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            {post.excerpt}
-          </p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              {post.excerpt}
+            </p>
+            {post.links && post.links.length > 0 && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                {post.links.map((link) => (
+                  <a
+                    key={link.url}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium"
+                    style={{ color: "var(--accent-blue)" }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
           {post.imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -400,9 +424,195 @@ function EntryIcon({ kind }: { kind: Entry["kind"] }) {
   );
 }
 
+// ── month row (used for both anchor months and months inside expanded gaps) ───
+
+function MonthRow({
+  data,
+  isExpanded,
+  onToggle,
+}: {
+  data: MonthData;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const { month, entries } = data;
+  const spaceIdx = month.indexOf(" ");
+  const monthName = month.slice(0, spaceIdx);
+  const year = month.slice(spaceIdx + 1);
+
+  return (
+    <div className="mb-6">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 mb-5 text-left"
+        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, paddingLeft: "40px" }}
+      >
+        <span style={{ color: "var(--text-muted)", flexShrink: 0, display: "flex", alignItems: "center" }}>
+          <ChevronIcon size={12} down={isExpanded} />
+        </span>
+        <span className="text-sm font-semibold" style={{ color: "var(--text-primary)", flexShrink: 0 }}>
+          {monthName}
+        </span>
+        <span className="text-sm" style={{ color: "var(--text-muted)", flexShrink: 0 }}>
+          {year}
+        </span>
+        {isExpanded ? (
+          <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+        ) : (
+          <>
+            <span style={{ color: "var(--border-strong)", fontSize: "10px", flexShrink: 0 }}>·</span>
+            <CollapsedSummary entries={entries} />
+          </>
+        )}
+      </button>
+
+      {isExpanded &&
+        entries.map((entry, i) => (
+          <div key={i} className="relative mb-6 pl-10">
+            <div className="absolute left-0 top-0">
+              <EntryIcon kind={entry.kind} />
+            </div>
+            {entry.kind === "github" && <GitHubEntry item={entry.item} />}
+            {entry.kind === "article" && <ArticleEntry article={entry.article} />}
+            {entry.kind === "publication" && <PublicationEntry pub={entry.pub} />}
+            {entry.kind === "linkedin" && <LinkedInEntry post={entry.post} />}
+            {entry.kind === "manual" && <ManualPostEntry post={entry.post} />}
+          </div>
+        ))}
+    </div>
+  );
+}
+
+// ── gap row ───────────────────────────────────────────────────────────────────
+
+function gapSummaryText(months: MonthData[]): string {
+  const allEntries = months.flatMap((m) => m.entries);
+  const commitCount = allEntries
+    .filter((e): e is Extract<Entry, { kind: "github" }> => e.kind === "github")
+    .reduce((s, e) => s + e.item.repos.reduce((r, repo) => r + repo.commits, 0), 0);
+  const articleCount = allEntries.filter((e) => e.kind === "article").length;
+  const pubCount = allEntries.filter((e) => e.kind === "publication").length;
+  const liCount = allEntries.filter((e) => e.kind === "linkedin").length;
+  const manualCount = allEntries.filter((e) => e.kind === "manual").length;
+
+  const n = months.length;
+  const parts: string[] = [`${n} month${n !== 1 ? "s" : ""}`];
+  if (commitCount > 0) parts.push(`${commitCount} commit${commitCount !== 1 ? "s" : ""}`);
+  if (articleCount > 0) parts.push(`${articleCount} article${articleCount !== 1 ? "s" : ""}`);
+  if (pubCount > 0) parts.push(`${pubCount} publication${pubCount !== 1 ? "s" : ""}`);
+  if (liCount > 0) parts.push(`${liCount} post${liCount !== 1 ? "s" : ""}`);
+  if (manualCount > 0) parts.push(`${manualCount} update${manualCount !== 1 ? "s" : ""}`);
+
+  return parts.join("  ·  ");
+}
+
+function GapRow({
+  months,
+  isExpanded,
+  onToggle,
+  expandedMonths,
+  onToggleMonth,
+}: {
+  months: MonthData[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  expandedMonths: Set<string>;
+  onToggleMonth: (month: string) => void;
+}) {
+  const summary = gapSummaryText(months);
+  const newest = months[0].month;
+  const oldest = months[months.length - 1].month;
+  const rangeLabel = newest === oldest ? newest : `${oldest} – ${newest}`;
+
+  return (
+    <div className="relative mb-6">
+      {/* Cover the solid vertical line in this gap section */}
+      <div
+        style={{
+          position: "absolute",
+          left: "13px",
+          top: 0,
+          bottom: 0,
+          width: "6px",
+          background: "var(--bg)",
+          zIndex: 1,
+        }}
+      />
+      {/* Dashed replacement line */}
+      <div
+        style={{
+          position: "absolute",
+          left: "15px",
+          top: 0,
+          bottom: 0,
+          width: "2px",
+          backgroundImage:
+            "repeating-linear-gradient(to bottom, var(--border) 0, var(--border) 4px, transparent 4px, transparent 10px)",
+          zIndex: 2,
+        }}
+      />
+
+      {/* Toggle button */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 text-left"
+        style={{
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: "10px 0",
+          paddingLeft: "40px",
+          position: "relative",
+          zIndex: 3,
+        }}
+      >
+        <span
+          className="text-xs"
+          style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}
+        >
+          {isExpanded ? rangeLabel : `· · ·  ${summary}  · · ·`}
+        </span>
+        <span
+          className="text-xs shrink-0"
+          style={{ color: "var(--accent-blue)", fontFamily: "var(--font-geist-mono)" }}
+        >
+          {isExpanded ? "hide ↑" : "show ↓"}
+        </span>
+      </button>
+
+      {/* Expanded gap content — scrollable, max 100vh */}
+      {isExpanded && (
+        <div
+          style={{
+            maxHeight: "100vh",
+            overflowY: "auto",
+            position: "relative",
+            zIndex: 3,
+          }}
+        >
+          {months.map(({ month, entries }) => (
+            <MonthRow
+              key={month}
+              data={{ month, entries }}
+              isExpanded={expandedMonths.has(month)}
+              onToggle={() => onToggleMonth(month)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
-export default function CombinedFeed({ activityGroups, articles, publications, linkedInPosts, manualPosts }: Props) {
+export default function CombinedFeed({
+  activityGroups,
+  articles,
+  publications,
+  linkedInPosts,
+  manualPosts,
+}: Props) {
   // Build unified month → entries map
   const monthMap = new Map<string, Entry[]>();
 
@@ -420,17 +630,52 @@ export default function CombinedFeed({ activityGroups, articles, publications, l
   for (const post of linkedInPosts) add(toMonthLabel(post.date), { kind: "linkedin", post });
   for (const post of manualPosts) add(toMonthLabel(post.date), { kind: "manual", post });
 
-  const groups = [...monthMap.entries()]
+  const sortedGroups: MonthData[] = [...monthMap.entries()]
     .sort((a, b) => monthToSortKey(b[0]) - monthToSortKey(a[0]))
     .map(([month, entries]) => ({ month, entries }));
 
-  // Smart default: expand most recent GitHub month + most recent article month
-  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => {
-    const auto = new Set<string>();
-    if (activityGroups.length > 0) auto.add(activityGroups[0].month);
-    if (articles.length > 0) auto.add(toMonthLabel(articles[0].date));
-    return auto;
-  });
+  // Anchor months: the most recent month containing each content type.
+  // These are always shown regardless of how long ago they occurred.
+  const anchorMonths = new Set<string>();
+  if (activityGroups[0]) anchorMonths.add(activityGroups[0].month);
+  if (articles[0]) anchorMonths.add(toMonthLabel(articles[0].date));
+  if (publications[0]) anchorMonths.add(toMonthLabel(publications[0].date));
+  if (linkedInPosts[0]) anchorMonths.add(toMonthLabel(linkedInPosts[0].date));
+  if (manualPosts[0]) anchorMonths.add(toMonthLabel(manualPosts[0].date));
+
+  // Build display sequence: anchor months stay in place; any months with data
+  // between two anchors are batched into a gap node.
+  const displayItems: DisplayItem[] = [];
+  let gapBuffer: MonthData[] = [];
+  let gapId = 0;
+
+  for (const data of sortedGroups) {
+    if (anchorMonths.has(data.month)) {
+      if (gapBuffer.length > 0) {
+        displayItems.push({ kind: "gap", months: gapBuffer, id: gapId++ });
+        gapBuffer = [];
+      }
+      displayItems.push({ kind: "anchor", data });
+    } else {
+      gapBuffer.push(data);
+    }
+  }
+  if (gapBuffer.length > 0) {
+    displayItems.push({ kind: "gap", months: gapBuffer, id: gapId++ });
+  }
+
+  // All anchor months start expanded; gap months start collapsed.
+  // Hooks must be called before any early returns.
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => new Set(anchorMonths));
+  const [expandedGaps, setExpandedGaps] = useState<Set<number>>(new Set());
+
+  if (sortedGroups.length === 0) {
+    return (
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+        No activity found.
+      </p>
+    );
+  }
 
   const toggleMonth = (month: string) =>
     setExpandedMonths((prev) => {
@@ -439,13 +684,12 @@ export default function CombinedFeed({ activityGroups, articles, publications, l
       return next;
     });
 
-  if (groups.length === 0) {
-    return (
-      <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-        No activity found.
-      </p>
-    );
-  }
+  const toggleGap = (id: number) =>
+    setExpandedGaps((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   return (
     <div>
@@ -457,62 +701,31 @@ export default function CombinedFeed({ activityGroups, articles, publications, l
       </h2>
 
       <div className="relative">
-        {/* Continuous vertical timeline line */}
+        {/* Continuous solid vertical timeline line — gaps overlay it with dashes */}
         <div
           className="absolute top-0 bottom-0"
           style={{ left: "15px", width: "2px", background: "var(--border)" }}
         />
 
-        {groups.map(({ month, entries }) => {
-          const isExpanded = expandedMonths.has(month);
-          const spaceIdx = month.indexOf(" ");
-          const monthName = month.slice(0, spaceIdx);
-          const year = month.slice(spaceIdx + 1);
-
-          return (
-            <div key={month} className="mb-6">
-              {/* Month header — always visible, always clickable */}
-              <button
-                onClick={() => toggleMonth(month)}
-                className="w-full flex items-center gap-2 mb-5 pl-10 text-left"
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, paddingLeft: "40px" }}
-              >
-                <span style={{ color: "var(--text-muted)", flexShrink: 0, display: "flex", alignItems: "center" }}>
-                  <ChevronIcon size={12} down={isExpanded} />
-                </span>
-                <span className="text-sm font-semibold" style={{ color: "var(--text-primary)", flexShrink: 0 }}>
-                  {monthName}
-                </span>
-                <span className="text-sm" style={{ color: "var(--text-muted)", flexShrink: 0 }}>
-                  {year}
-                </span>
-                {isExpanded ? (
-                  <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                ) : (
-                  <>
-                    <span style={{ color: "var(--border-strong)", fontSize: "10px", flexShrink: 0 }}>·</span>
-                    <CollapsedSummary entries={entries} />
-                  </>
-                )}
-              </button>
-
-              {/* Entries — only rendered when expanded */}
-              {isExpanded && entries.map((entry, i) => (
-                <div key={i} className="relative mb-6 pl-10">
-                  <div className="absolute left-0 top-0">
-                    <EntryIcon kind={entry.kind} />
-                  </div>
-
-                  {entry.kind === "github" && <GitHubEntry item={entry.item} />}
-                  {entry.kind === "article" && <ArticleEntry article={entry.article} />}
-                  {entry.kind === "publication" && <PublicationEntry pub={entry.pub} />}
-                  {entry.kind === "linkedin" && <LinkedInEntry post={entry.post} />}
-                  {entry.kind === "manual" && <ManualPostEntry post={entry.post} />}
-                </div>
-              ))}
-            </div>
-          );
-        })}
+        {displayItems.map((item) =>
+          item.kind === "anchor" ? (
+            <MonthRow
+              key={item.data.month}
+              data={item.data}
+              isExpanded={expandedMonths.has(item.data.month)}
+              onToggle={() => toggleMonth(item.data.month)}
+            />
+          ) : (
+            <GapRow
+              key={`gap-${item.id}`}
+              months={item.months}
+              isExpanded={expandedGaps.has(item.id)}
+              onToggle={() => toggleGap(item.id)}
+              expandedMonths={expandedMonths}
+              onToggleMonth={toggleMonth}
+            />
+          )
+        )}
       </div>
     </div>
   );

@@ -88,5 +88,6 @@ export interface ManualPost {
   type: "achievement" | "career" | "project" | "event" | "announcement";
   excerpt: string;
   url?: string;
+  links?: { label: string; url: string }[];
   imageUrl?: string;
 }
