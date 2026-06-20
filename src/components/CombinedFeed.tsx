@@ -20,15 +20,25 @@ function toMonthLabel(isoDate: string): string {
   return d.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
 }
 
+const MONTH_NAMES = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+
+// Parse "Month YYYY" into a numeric ordinal — timezone-independent.
+function monthOrdinal(label: string): number {
+  const [name, year] = label.split(" ");
+  const m = MONTH_NAMES.indexOf(name);
+  const y = parseInt(year, 10);
+  return isNaN(y) || m < 0 ? 0 : y * 12 + m;
+}
+
 function monthToSortKey(label: string): number {
-  return new Date(label).getTime();
+  return monthOrdinal(label);
 }
 
 function monthDiff(olderLabel: string, newerLabel: string): number {
-  const d1 = new Date(olderLabel);
-  const d2 = new Date(newerLabel);
-  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
-  return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+  return monthOrdinal(newerLabel) - monthOrdinal(olderLabel);
 }
 
 function formatDate(isoDate: string): string {
