@@ -55,13 +55,14 @@ export default function Nav() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          <a
-            href="mailto:ethanrozee01@gmail.com"
+          <Link
+            href="/contact"
             className="px-3 py-1.5 text-xs font-medium rounded border transition-colors"
             style={{
               borderColor: "var(--border)",
               color: "var(--text-secondary)",
               background: "transparent",
+              fontFamily: "var(--font-geist-mono)",
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.background = "var(--bg-card)";
@@ -72,8 +73,8 @@ export default function Nav() {
               (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
             }}
           >
-            Get in touch
-          </a>
+            ~/contact
+          </Link>
         </div>
 
         <button
@@ -100,6 +101,14 @@ export default function Nav() {
               {l.label}
             </Link>
           ))}
+          <Link
+            href="/contact"
+            className="py-2 text-sm"
+            style={{ color: "var(--text-secondary)", fontFamily: "var(--font-geist-mono)" }}
+            onClick={() => setMenuOpen(false)}
+          >
+            ~/contact
+          </Link>
         </div>
       )}
     </header>
