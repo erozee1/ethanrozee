@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { CommitIcon, ArticleIcon, BookIcon, LinkedInIcon, ChevronIcon, FlagIcon } from "@/components/icons";
 import type { ActivityGroup, ActivityItem, Article, Publication, LinkedInPost, ManualPost } from "@/types";
 
@@ -24,6 +24,13 @@ function monthToSortKey(label: string): number {
   return new Date(label).getTime();
 }
 
+function monthDiff(olderLabel: string, newerLabel: string): number {
+  const d1 = new Date(olderLabel);
+  const d2 = new Date(newerLabel);
+  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
+  return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+}
+
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);
   if (isNaN(d.getTime())) return "";
@@ -43,7 +50,9 @@ type MonthData = { month: string; entries: Entry[] };
 
 type DisplayItem =
   | { kind: "anchor"; data: MonthData }
-  | { kind: "gap"; months: MonthData[]; id: number };
+  // months: data-carrying months to show when expanded
+  // label: override text for empty gaps that have no expandable content
+  | { kind: "gap"; months: MonthData[]; id: number; label?: string };
 
 // ── collapsed month summary ───────────────────────────────────────────────────
 
@@ -508,80 +517,97 @@ function gapSummaryText(months: MonthData[]): string {
 
 function GapRow({
   months,
+  label,
   isExpanded,
   onToggle,
   expandedMonths,
   onToggleMonth,
 }: {
   months: MonthData[];
+  label?: string;
   isExpanded: boolean;
   onToggle: () => void;
   expandedMonths: Set<string>;
   onToggleMonth: (month: string) => void;
 }) {
-  const summary = gapSummaryText(months);
-  const newest = months[0].month;
-  const oldest = months[months.length - 1].month;
+  const canExpand = months.length > 0;
+  const summary = canExpand ? gapSummaryText(months) : (label ?? "");
+  const newest = canExpand ? months[0].month : "";
+  const oldest = canExpand ? months[months.length - 1].month : "";
   const rangeLabel = newest === oldest ? newest : `${oldest} – ${newest}`;
+
+  const lineStyle: React.CSSProperties = {
+    position: "absolute",
+    left: "13px",
+    top: 0,
+    bottom: 0,
+    width: "6px",
+    background: "var(--bg)",
+    zIndex: 1,
+  };
+
+  const dashStyle: React.CSSProperties = {
+    position: "absolute",
+    left: "15px",
+    top: 0,
+    bottom: 0,
+    width: "2px",
+    backgroundImage:
+      "repeating-linear-gradient(to bottom, var(--border) 0, var(--border) 4px, transparent 4px, transparent 10px)",
+    zIndex: 2,
+  };
+
+  const innerStyle: React.CSSProperties = {
+    padding: "10px 0",
+    paddingLeft: "40px",
+    position: "relative",
+    zIndex: 3,
+  };
 
   return (
     <div className="relative mb-6">
       {/* Cover the solid vertical line in this gap section */}
-      <div
-        style={{
-          position: "absolute",
-          left: "13px",
-          top: 0,
-          bottom: 0,
-          width: "6px",
-          background: "var(--bg)",
-          zIndex: 1,
-        }}
-      />
+      <div style={lineStyle} />
       {/* Dashed replacement line */}
-      <div
-        style={{
-          position: "absolute",
-          left: "15px",
-          top: 0,
-          bottom: 0,
-          width: "2px",
-          backgroundImage:
-            "repeating-linear-gradient(to bottom, var(--border) 0, var(--border) 4px, transparent 4px, transparent 10px)",
-          zIndex: 2,
-        }}
-      />
+      <div style={dashStyle} />
 
-      {/* Toggle button */}
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-3 text-left"
-        style={{
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: "10px 0",
-          paddingLeft: "40px",
-          position: "relative",
-          zIndex: 3,
-        }}
-      >
-        <span
-          className="text-xs"
-          style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}
+      {canExpand ? (
+        /* Expandable gap — has hidden months to show */
+        <button
+          onClick={onToggle}
+          className="w-full flex items-center gap-3 text-left"
+          style={{ background: "none", border: "none", cursor: "pointer", ...innerStyle }}
         >
-          {isExpanded ? rangeLabel : `· · ·  ${summary}  · · ·`}
-        </span>
-        <span
-          className="text-xs shrink-0"
-          style={{ color: "var(--accent-blue)", fontFamily: "var(--font-geist-mono)" }}
+          <span
+            className="text-xs"
+            style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}
+          >
+            {isExpanded ? rangeLabel : `· · ·  ${summary}  · · ·`}
+          </span>
+          <span
+            className="text-xs shrink-0"
+            style={{ color: "var(--accent-blue)", fontFamily: "var(--font-geist-mono)" }}
+          >
+            {isExpanded ? "hide ↑" : "show ↓"}
+          </span>
+        </button>
+      ) : (
+        /* Visual-only gap — no data to expand, just indicates temporal distance */
+        <div
+          className="flex items-center gap-3"
+          style={innerStyle}
         >
-          {isExpanded ? "hide ↑" : "show ↓"}
-        </span>
-      </button>
+          <span
+            className="text-xs"
+            style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}
+          >
+            · · ·  {summary}  · · ·
+          </span>
+        </div>
+      )}
 
       {/* Expanded gap content — scrollable, max 100vh */}
-      {isExpanded && (
+      {canExpand && isExpanded && (
         <div
           style={{
             maxHeight: "100vh",
@@ -664,6 +690,22 @@ export default function CombinedFeed({
     displayItems.push({ kind: "gap", months: gapBuffer, id: gapId++ });
   }
 
+  // Post-process: for consecutive anchor months with no data gap between them,
+  // insert a visual-only gap when they're more than 1 calendar month apart.
+  const finalDisplayItems: DisplayItem[] = [];
+  for (let i = 0; i < displayItems.length; i++) {
+    finalDisplayItems.push(displayItems[i]);
+    const curr = displayItems[i];
+    const next = displayItems[i + 1];
+    if (curr?.kind === "anchor" && next?.kind === "anchor") {
+      const n = monthDiff(next.data.month, curr.data.month);
+      if (n > 1) {
+        const lbl = n === 1 ? "1 month" : `${n} months`;
+        finalDisplayItems.push({ kind: "gap", months: [], id: gapId++, label: lbl });
+      }
+    }
+  }
+
   // All anchor months start expanded; gap months start collapsed.
   // Hooks must be called before any early returns.
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => new Set(anchorMonths));
@@ -707,7 +749,7 @@ export default function CombinedFeed({
           style={{ left: "15px", width: "2px", background: "var(--border)" }}
         />
 
-        {displayItems.map((item) =>
+        {finalDisplayItems.map((item) =>
           item.kind === "anchor" ? (
             <MonthRow
               key={item.data.month}
@@ -719,6 +761,7 @@ export default function CombinedFeed({
             <GapRow
               key={`gap-${item.id}`}
               months={item.months}
+              label={item.label}
               isExpanded={expandedGaps.has(item.id)}
               onToggle={() => toggleGap(item.id)}
               expandedMonths={expandedMonths}
