@@ -30,6 +30,24 @@ export function StarIcon({ size = 12 }: { size?: number }) {
   );
 }
 
+export function ChevronIcon({ size = 12, down = true }: { size?: number; down?: boolean }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ transform: down ? "none" : "rotate(-90deg)", transition: "transform 0.15s" }}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
+  );
+}
+
 export function BookIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">

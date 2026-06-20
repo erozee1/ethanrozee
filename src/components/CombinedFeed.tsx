@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CommitIcon, ArticleIcon, BookIcon, LinkedInIcon } from "@/components/icons";
+import { CommitIcon, ArticleIcon, BookIcon, LinkedInIcon, ChevronIcon } from "@/components/icons";
 import type { ActivityGroup, ActivityItem, Article, Publication, LinkedInPost } from "@/types";
 
 interface Props {
@@ -36,6 +36,32 @@ type Entry =
   | { kind: "article"; article: Article }
   | { kind: "publication"; pub: Publication }
   | { kind: "linkedin"; post: LinkedInPost };
+
+// ── collapsed month summary ───────────────────────────────────────────────────
+
+function CollapsedSummary({ entries }: { entries: Entry[] }) {
+  const commitCount = entries
+    .filter((e): e is Extract<Entry, { kind: "github" }> => e.kind === "github")
+    .reduce((s, e) => s + e.item.repos.reduce((r, repo) => r + repo.commits, 0), 0);
+  const articleCount = entries.filter((e) => e.kind === "article").length;
+  const pubCount = entries.filter((e) => e.kind === "publication").length;
+  const liCount = entries.filter((e) => e.kind === "linkedin").length;
+
+  const parts: string[] = [];
+  if (commitCount > 0) parts.push(`${commitCount} commit${commitCount !== 1 ? "s" : ""}`);
+  if (articleCount > 0) parts.push(`${articleCount} article${articleCount !== 1 ? "s" : ""}`);
+  if (pubCount > 0) parts.push(`${pubCount} publication${pubCount !== 1 ? "s" : ""}`);
+  if (liCount > 0) parts.push(`${liCount} post${liCount !== 1 ? "s" : ""}`);
+
+  return (
+    <span
+      className="text-xs"
+      style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}
+    >
+      {parts.join("  ·  ")}
+    </span>
+  );
+}
 
 // ── sub-renderers ─────────────────────────────────────────────────────────────
 
@@ -172,7 +198,10 @@ function ArticleEntry({ article }: { article: Article }) {
 
 function PublicationEntry({ pub }: { pub: Publication }) {
   const [hovered, setHovered] = useState(false);
-  const titleStyle = { color: hovered && pub.url ? "var(--accent-blue)" : "var(--text-primary)", transition: "color 0.15s" };
+  const titleStyle = {
+    color: hovered && pub.url ? "var(--accent-blue)" : "var(--text-primary)",
+    transition: "color 0.15s",
+  };
 
   return (
     <div>
@@ -303,6 +332,7 @@ function EntryIcon({ kind }: { kind: Entry["kind"] }) {
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function CombinedFeed({ activityGroups, articles, publications, linkedInPosts }: Props) {
+  // Build unified month → entries map
   const monthMap = new Map<string, Entry[]>();
 
   const add = (month: string, entry: Entry) => {
@@ -312,23 +342,30 @@ export default function CombinedFeed({ activityGroups, articles, publications, l
   };
 
   for (const group of activityGroups) {
-    for (const item of group.items) {
-      add(group.month, { kind: "github", item });
-    }
+    for (const item of group.items) add(group.month, { kind: "github", item });
   }
-  for (const article of articles) {
-    add(toMonthLabel(article.date), { kind: "article", article });
-  }
-  for (const pub of publications) {
-    add(toMonthLabel(pub.date), { kind: "publication", pub });
-  }
-  for (const post of linkedInPosts) {
-    add(toMonthLabel(post.date), { kind: "linkedin", post });
-  }
+  for (const article of articles) add(toMonthLabel(article.date), { kind: "article", article });
+  for (const pub of publications) add(toMonthLabel(pub.date), { kind: "publication", pub });
+  for (const post of linkedInPosts) add(toMonthLabel(post.date), { kind: "linkedin", post });
 
   const groups = [...monthMap.entries()]
     .sort((a, b) => monthToSortKey(b[0]) - monthToSortKey(a[0]))
     .map(([month, entries]) => ({ month, entries }));
+
+  // Smart default: expand most recent GitHub month + most recent article month
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => {
+    const auto = new Set<string>();
+    if (activityGroups.length > 0) auto.add(activityGroups[0].month);
+    if (articles.length > 0) auto.add(toMonthLabel(articles[0].date));
+    return auto;
+  });
+
+  const toggleMonth = (month: string) =>
+    setExpandedMonths((prev) => {
+      const next = new Set(prev);
+      next.has(month) ? next.delete(month) : next.add(month);
+      return next;
+    });
 
   if (groups.length === 0) {
     return (
@@ -348,29 +385,47 @@ export default function CombinedFeed({ activityGroups, articles, publications, l
       </h2>
 
       <div className="relative">
+        {/* Continuous vertical timeline line */}
         <div
           className="absolute top-0 bottom-0"
           style={{ left: "15px", width: "2px", background: "var(--border)" }}
         />
 
         {groups.map(({ month, entries }) => {
+          const isExpanded = expandedMonths.has(month);
           const spaceIdx = month.indexOf(" ");
           const monthName = month.slice(0, spaceIdx);
           const year = month.slice(spaceIdx + 1);
 
           return (
-            <div key={month} className="mb-8">
-              <div className="flex items-center gap-2 mb-5 pl-10">
-                <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            <div key={month} className="mb-6">
+              {/* Month header — always visible, always clickable */}
+              <button
+                onClick={() => toggleMonth(month)}
+                className="w-full flex items-center gap-2 mb-5 pl-10 text-left"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, paddingLeft: "40px" }}
+              >
+                <span style={{ color: "var(--text-muted)", flexShrink: 0, display: "flex", alignItems: "center" }}>
+                  <ChevronIcon size={12} down={isExpanded} />
+                </span>
+                <span className="text-sm font-semibold" style={{ color: "var(--text-primary)", flexShrink: 0 }}>
                   {monthName}
                 </span>
-                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                <span className="text-sm" style={{ color: "var(--text-muted)", flexShrink: 0 }}>
                   {year}
                 </span>
-                <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
-              </div>
+                {isExpanded ? (
+                  <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                ) : (
+                  <>
+                    <span style={{ color: "var(--border-strong)", fontSize: "10px", flexShrink: 0 }}>·</span>
+                    <CollapsedSummary entries={entries} />
+                  </>
+                )}
+              </button>
 
-              {entries.map((entry, i) => (
+              {/* Entries — only rendered when expanded */}
+              {isExpanded && entries.map((entry, i) => (
                 <div key={i} className="relative mb-6 pl-10">
                   <div className="absolute left-0 top-0">
                     <EntryIcon kind={entry.kind} />
