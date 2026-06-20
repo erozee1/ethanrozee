@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { CommitIcon, ArticleIcon, BookIcon, LinkedInIcon, ChevronIcon } from "@/components/icons";
-import type { ActivityGroup, ActivityItem, Article, Publication, LinkedInPost } from "@/types";
+import { CommitIcon, ArticleIcon, BookIcon, LinkedInIcon, ChevronIcon, FlagIcon } from "@/components/icons";
+import type { ActivityGroup, ActivityItem, Article, Publication, LinkedInPost, ManualPost } from "@/types";
 
 interface Props {
   activityGroups: ActivityGroup[];
   articles: Article[];
   publications: Publication[];
   linkedInPosts: LinkedInPost[];
+  manualPosts: ManualPost[];
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -35,7 +36,8 @@ type Entry =
   | { kind: "github"; item: ActivityItem }
   | { kind: "article"; article: Article }
   | { kind: "publication"; pub: Publication }
-  | { kind: "linkedin"; post: LinkedInPost };
+  | { kind: "linkedin"; post: LinkedInPost }
+  | { kind: "manual"; post: ManualPost };
 
 // ── collapsed month summary ───────────────────────────────────────────────────
 
@@ -46,12 +48,14 @@ function CollapsedSummary({ entries }: { entries: Entry[] }) {
   const articleCount = entries.filter((e) => e.kind === "article").length;
   const pubCount = entries.filter((e) => e.kind === "publication").length;
   const liCount = entries.filter((e) => e.kind === "linkedin").length;
+  const manualCount = entries.filter((e) => e.kind === "manual").length;
 
   const parts: string[] = [];
   if (commitCount > 0) parts.push(`${commitCount} commit${commitCount !== 1 ? "s" : ""}`);
   if (articleCount > 0) parts.push(`${articleCount} article${articleCount !== 1 ? "s" : ""}`);
   if (pubCount > 0) parts.push(`${pubCount} publication${pubCount !== 1 ? "s" : ""}`);
   if (liCount > 0) parts.push(`${liCount} post${liCount !== 1 ? "s" : ""}`);
+  if (manualCount > 0) parts.push(`${manualCount} update${manualCount !== 1 ? "s" : ""}`);
 
   return (
     <span
@@ -315,6 +319,72 @@ function LinkedInEntry({ post }: { post: LinkedInPost }) {
   );
 }
 
+const manualTypeMeta: Record<ManualPost["type"], { label: string; bg: string; color: string }> = {
+  achievement:  { label: "Achievement",  bg: "var(--accent-yellow)", color: "#151515" },
+  career:       { label: "Career",       bg: "var(--accent-blue)",   color: "#fff"    },
+  project:      { label: "Project",      bg: "var(--accent-green)",  color: "#fff"    },
+  event:        { label: "Event",        bg: "var(--accent-red)",    color: "#fff"    },
+  announcement: { label: "Announcement", bg: "var(--border-strong)", color: "var(--text-primary)" },
+};
+
+function ManualPostEntry({ post }: { post: ManualPost }) {
+  const [hovered, setHovered] = useState(false);
+  const meta = manualTypeMeta[post.type];
+  const titleStyle = {
+    color: hovered && post.url ? "var(--accent-blue)" : "var(--text-primary)",
+    transition: "color 0.15s",
+  };
+
+  return (
+    <div>
+      {post.url ? (
+        <a
+          href={post.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: "none" }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <p className="text-sm font-semibold mb-2 leading-snug" style={titleStyle}>{post.title}</p>
+        </a>
+      ) : (
+        <p className="text-sm font-semibold mb-2 leading-snug" style={titleStyle}>{post.title}</p>
+      )}
+      <div className="rounded-lg border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+        <div
+          className="px-4 py-2 border-b flex items-center gap-2"
+          style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}
+        >
+          <span
+            className="inline-flex items-center px-2 h-5 rounded font-semibold shrink-0"
+            style={{ background: meta.bg, color: meta.color, fontSize: "10px" }}
+          >
+            {meta.label}
+          </span>
+          <span className="text-xs" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
+            {formatDate(post.date)}
+          </span>
+        </div>
+        <div className="px-4 py-3 flex items-start gap-3" style={{ background: "var(--bg)" }}>
+          <p className="flex-1 text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            {post.excerpt}
+          </p>
+          {post.imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={post.imageUrl}
+              alt=""
+              className="w-12 h-12 rounded object-cover shrink-0"
+              style={{ border: "1px solid var(--border)" }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EntryIcon({ kind }: { kind: Entry["kind"] }) {
   return (
     <div
@@ -325,13 +395,14 @@ function EntryIcon({ kind }: { kind: Entry["kind"] }) {
       {kind === "article" && <ArticleIcon />}
       {kind === "publication" && <BookIcon />}
       {kind === "linkedin" && <LinkedInIcon />}
+      {kind === "manual" && <FlagIcon />}
     </div>
   );
 }
 
 // ── main component ────────────────────────────────────────────────────────────
 
-export default function CombinedFeed({ activityGroups, articles, publications, linkedInPosts }: Props) {
+export default function CombinedFeed({ activityGroups, articles, publications, linkedInPosts, manualPosts }: Props) {
   // Build unified month → entries map
   const monthMap = new Map<string, Entry[]>();
 
@@ -347,6 +418,7 @@ export default function CombinedFeed({ activityGroups, articles, publications, l
   for (const article of articles) add(toMonthLabel(article.date), { kind: "article", article });
   for (const pub of publications) add(toMonthLabel(pub.date), { kind: "publication", pub });
   for (const post of linkedInPosts) add(toMonthLabel(post.date), { kind: "linkedin", post });
+  for (const post of manualPosts) add(toMonthLabel(post.date), { kind: "manual", post });
 
   const groups = [...monthMap.entries()]
     .sort((a, b) => monthToSortKey(b[0]) - monthToSortKey(a[0]))
@@ -435,6 +507,7 @@ export default function CombinedFeed({ activityGroups, articles, publications, l
                   {entry.kind === "article" && <ArticleEntry article={entry.article} />}
                   {entry.kind === "publication" && <PublicationEntry pub={entry.pub} />}
                   {entry.kind === "linkedin" && <LinkedInEntry post={entry.post} />}
+                  {entry.kind === "manual" && <ManualPostEntry post={entry.post} />}
                 </div>
               ))}
             </div>

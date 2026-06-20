@@ -1,0 +1,9 @@
+{
+  "id": "your-unique-slug-here",
+  "title": "Headline shown in the timeline",
+  "date": "YYYY-MM-DD",
+  "type": "achievement | career | project | event | announcement",
+  "excerpt": "One or two sentences describing the milestone. Keep under 200 characters.",
+  "url": "https://optional-link.com",
+  "imageUrl": "https://optional-image-url.com/image.png"
+}

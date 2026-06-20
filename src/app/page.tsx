@@ -5,6 +5,7 @@ import CombinedFeed from "@/components/CombinedFeed";
 import { workItems } from "@/data/work";
 import { publications } from "@/data/research";
 import { linkedInPosts } from "@/data/linkedin";
+import { manualPosts } from "@/data/posts";
 import { fetchContribData, fetchActivityGroups } from "@/lib/github";
 import { fetchArticles } from "@/lib/articles";
 
@@ -36,6 +37,7 @@ export default async function Home() {
               articles={articles}
               publications={publications}
               linkedInPosts={linkedInPosts}
+              manualPosts={manualPosts}
             />
           </section>
         </div>

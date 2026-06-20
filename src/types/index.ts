@@ -80,3 +80,13 @@ export interface LinkedInPost {
   url: string;
   imageUrl?: string;
 }
+
+export interface ManualPost {
+  id: string;
+  title: string;
+  date: string;
+  type: "achievement" | "career" | "project" | "event" | "announcement";
+  excerpt: string;
+  url?: string;
+  imageUrl?: string;
+}

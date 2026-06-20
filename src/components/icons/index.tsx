@@ -30,6 +30,14 @@ export function StarIcon({ size = 12 }: { size?: number }) {
   );
 }
 
+export function FlagIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
+      <path d="M2.75 0A.75.75 0 0 1 3.5.75V1h8.75a.75.75 0 0 1 .5 1.305l-3.5 3a.75.75 0 0 0 0 1.39l3.5 3a.75.75 0 0 1-.5 1.305H3.5v4.25a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 2.75 0Z" />
+    </svg>
+  );
+}
+
 export function ChevronIcon({ size = 12, down = true }: { size?: number; down?: boolean }) {
   return (
     <svg
