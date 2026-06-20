@@ -51,3 +51,13 @@ export interface NavLink {
   href: string;
   label: string;
 }
+
+export interface Article {
+  title: string;
+  subtitle?: string;
+  date: string;
+  url: string;
+  source: "medium" | "substack";
+  readTime?: string;
+  imageUrl?: string;
+}
