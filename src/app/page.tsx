@@ -1,14 +1,18 @@
 import ProfileSidebar from "@/components/ProfileSidebar";
 import PinnedWork from "@/components/PinnedWork";
 import ContribGraph from "@/components/ContribGraph";
-import ActivityFeed from "@/components/ActivityFeed";
+import CombinedFeed from "@/components/CombinedFeed";
 import { workItems } from "@/data/work";
+import { publications } from "@/data/research";
+import { linkedInPosts } from "@/data/linkedin";
 import { fetchContribData, fetchActivityGroups } from "@/lib/github";
+import { fetchArticles } from "@/lib/articles";
 
 export default async function Home() {
-  const [contribData, activityGroups] = await Promise.all([
+  const [contribData, activityGroups, articles] = await Promise.all([
     fetchContribData(),
     fetchActivityGroups(),
+    fetchArticles(),
   ]);
 
   return (
@@ -27,7 +31,12 @@ export default async function Home() {
           </section>
 
           <section>
-            <ActivityFeed groups={activityGroups} />
+            <CombinedFeed
+              activityGroups={activityGroups}
+              articles={articles}
+              publications={publications}
+              linkedInPosts={linkedInPosts}
+            />
           </section>
         </div>
       </div>

@@ -61,3 +61,22 @@ export interface Article {
   readTime?: string;
   imageUrl?: string;
 }
+
+export interface Publication {
+  title: string;
+  authors: string[];
+  venue: string;
+  type: "conference" | "journal" | "thesis";
+  date: string;
+  doi?: string;
+  url?: string;
+  abstract?: string;
+}
+
+export interface LinkedInPost {
+  title: string;
+  excerpt: string;
+  date: string;
+  url: string;
+  imageUrl?: string;
+}
