@@ -19,7 +19,9 @@ export default async function Home() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="flex flex-col md:flex-row gap-8">
-        <ProfileSidebar />
+        <div className="shrink-0 self-start md:sticky md:top-14">
+          <ProfileSidebar />
+        </div>
 
         <div className="flex-1 min-w-0">
           <PinnedWork items={workItems} />
