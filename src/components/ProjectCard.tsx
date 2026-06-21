@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { StarIcon } from "@/components/icons";
 import type { WorkItem } from "@/types";
 
@@ -12,13 +13,14 @@ export default function ProjectCard({
   href,
   tags,
 }: WorkItem) {
-  const Wrapper = href ? "a" : "div";
+  const isExternal = href?.startsWith("http");
+  const Wrapper = href ? (isExternal ? "a" : Link) : "div";
 
   return (
     <Wrapper
-      href={href}
-      target={href ? "_blank" : undefined}
-      rel={href ? "noopener noreferrer" : undefined}
+      href={href as string}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noopener noreferrer" : undefined}
       className="block rounded-lg border p-4 transition-colors"
       style={{
         borderColor: "var(--border)",

@@ -30,6 +30,7 @@ export const workItems: WorkItem[] = [
     category: "Research",
     categoryColor: "#F1A82C",
     updatedAt: "2026-03-20",
+    href: "/research",
   },
   {
     id: "writing",
@@ -38,5 +39,6 @@ export const workItems: WorkItem[] = [
     category: "Writing",
     categoryColor: "#8957E5",
     updatedAt: "2026-03-01",
+    href: "/writing",
   },
 ];
