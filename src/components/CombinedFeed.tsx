@@ -742,10 +742,10 @@ export default function CombinedFeed({
     .map(([month, entries]) => ({ month, entries }));
 
   // Anchor months: always-visible months.
-  // GitHub: ALL activity months are anchors (users expect their full recent history).
-  // Everything else: only the most recent month of each type is an anchor.
+  // Show only the 2 most recent GitHub activity months as anchors; older ones
+  // fall into collapsible gap segments. All other types use their most recent month.
   const anchorMonths = new Set<string>();
-  for (const group of activityGroups) anchorMonths.add(group.month);
+  activityGroups.slice(0, 2).forEach((g) => anchorMonths.add(g.month));
   if (articles[0]) anchorMonths.add(toMonthLabel(articles[0].date));
   if (publications[0]) anchorMonths.add(toMonthLabel(publications[0].date));
   if (linkedInPosts[0]) anchorMonths.add(toMonthLabel(linkedInPosts[0].date));
