@@ -5,16 +5,6 @@ const USERNAME = "erozee1";
 
 // --- types ---------------------------------------------------------------
 
-interface GitHubEvent {
-  type: string;
-  repo: { name: string };
-  payload: {
-    size?: number;           // present with GITHUB_TOKEN; commit count for the push
-    commits?: { sha: string }[];
-  };
-  created_at: string;
-}
-
 export interface ContribDay {
   date: string;
   level: 0 | 1 | 2 | 3 | 4;
@@ -27,14 +17,6 @@ export interface ContribData {
 }
 
 // --- helpers -------------------------------------------------------------
-
-function authHeaders(): HeadersInit {
-  const token = process.env.GITHUB_TOKEN;
-  return {
-    Accept: "application/vnd.github.v3+json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
 
 function levelFromString(s: string): 0 | 1 | 2 | 3 | 4 {
   const map: Record<string, 0 | 1 | 2 | 3 | 4> = {
@@ -52,7 +34,20 @@ function monthLabel(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
 }
 
-// --- contribution calendar (requires GITHUB_TOKEN) -----------------------
+async function graphql(query: string, variables: Record<string, unknown>) {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return null;
+  const res = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+// --- contribution calendar -----------------------------------------------
 
 const CONTRIB_QUERY = `
   query($login: String!) {
@@ -74,21 +69,9 @@ const CONTRIB_QUERY = `
 `;
 
 export async function fetchContribData(): Promise<ContribData | null> {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) return null;
-
   try {
-    const res = await fetch("https://api.github.com/graphql", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ query: CONTRIB_QUERY, variables: { login: USERNAME } }),
-      next: { revalidate: 3600 },
-    });
-
-    if (!res.ok) return null;
-
-    const json = await res.json();
-    const calendar = json.data?.user?.contributionsCollection?.contributionCalendar;
+    const json = await graphql(CONTRIB_QUERY, { login: USERNAME });
+    const calendar = json?.data?.user?.contributionsCollection?.contributionCalendar;
     if (!calendar) return null;
 
     const weeks: ContribDay[][] = calendar.weeks.map(
@@ -106,40 +89,66 @@ export async function fetchContribData(): Promise<ContribData | null> {
   }
 }
 
-// --- activity feed (works without auth, 60 req/hr unauthenticated) -------
+// --- activity feed -------------------------------------------------------
+
+// Queries per-day commit counts per repo so numbers exactly match GitHub's
+// contribution activity page. Falls back to static data without a token.
+const ACTIVITY_QUERY = `
+  query($login: String!, $from: DateTime!, $to: DateTime!) {
+    user(login: $login) {
+      contributionsCollection(from: $from, to: $to) {
+        commitContributionsByRepository(maxRepositories: 25) {
+          repository { nameWithOwner }
+          contributions(first: 100) {
+            nodes {
+              occurredAt
+              commitCount
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 export async function fetchActivityGroups(): Promise<ActivityGroup[]> {
   try {
-    const res = await fetch(
-      `https://api.github.com/users/${USERNAME}/events?per_page=100`,
-      { headers: authHeaders(), next: { revalidate: 3600 } }
-    );
+    // Query the last 12 months
+    const to = new Date();
+    const from = new Date(to);
+    from.setFullYear(from.getFullYear() - 1);
 
-    if (!res.ok) return fallbackActivities;
+    const json = await graphql(ACTIVITY_QUERY, {
+      login: USERNAME,
+      from: from.toISOString(),
+      to: to.toISOString(),
+    });
 
-    const events: GitHubEvent[] = await res.json();
+    const byRepo: { repository: { nameWithOwner: string }; contributions: { nodes: { occurredAt: string; commitCount: number }[] } }[] =
+      json?.data?.user?.contributionsCollection?.commitContributionsByRepository ?? [];
 
-    const pushEvents = events.filter((e) => e.type === "PushEvent");
+    if (byRepo.length === 0) return fallbackActivities;
 
-    // Aggregate: month → repo → count
-    // `size` is only present with a token; fall back to counting 1 per PushEvent
-    const hasExactCounts = pushEvents.some((e) => typeof e.payload.size === "number");
+    // Aggregate: month → repo → total commits
     const byMonth: Record<string, Record<string, number>> = {};
 
-    for (const event of pushEvents) {
-      const month = monthLabel(event.created_at.slice(0, 10));
-      const repo = event.repo.name;
-      const count = event.payload.size ?? event.payload.commits?.length ?? 1;
-
-      byMonth[month] ??= {};
-      byMonth[month][repo] = (byMonth[month][repo] ?? 0) + count;
+    for (const { repository, contributions } of byRepo) {
+      const repoName = repository.nameWithOwner;
+      for (const { occurredAt, commitCount } of contributions.nodes) {
+        const month = monthLabel(occurredAt.slice(0, 10));
+        byMonth[month] ??= {};
+        byMonth[month][repoName] = (byMonth[month][repoName] ?? 0) + commitCount;
+      }
     }
 
     if (Object.keys(byMonth).length === 0) return fallbackActivities;
 
-    const unit = hasExactCounts ? "commit" : "push";
+    // Sort months descending (most recent first)
+    const sortedMonths = Object.entries(byMonth).sort(([a], [b]) => {
+      return new Date(b).getTime() - new Date(a).getTime();
+    });
 
-    return Object.entries(byMonth).map(([month, repos]) => {
+    return sortedMonths.map(([month, repos]) => {
       const sorted = Object.entries(repos).sort(([, a], [, b]) => b - a);
       const total = sorted.reduce((s, [, c]) => s + c, 0);
       const max = sorted[0]?.[1] ?? 1;
@@ -148,7 +157,7 @@ export async function fetchActivityGroups(): Promise<ActivityGroup[]> {
         month,
         items: [
           {
-            label: `${total} ${unit}${total !== 1 ? "s" : ""} across ${sorted.length} repositor${sorted.length !== 1 ? "ies" : "y"}`,
+            label: `${total} commit${total !== 1 ? "s" : ""} across ${sorted.length} repositor${sorted.length !== 1 ? "ies" : "y"}`,
             repos: sorted.map(([name, commits]) => ({
               name,
               commits,
