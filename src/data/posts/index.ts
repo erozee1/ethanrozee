@@ -7,6 +7,18 @@ import type { ManualPost } from "@/types";
 // alongside GitHub activity, writing, research, and LinkedIn posts.
 export const manualPosts: ManualPost[] = [
   {
+    id: "cursor-hands-off-2026-darwn",
+    title: "Cursor Hands-Off London hackathon",
+    date: "2026-06-25",
+    type: "event",
+    excerpt:
+      "Built Darwn at the Cursor Hands-Off hackathon — a fully autonomous, evolutionary grant agency. It finds open UK grants, matches companies to them, and runs a Darwinian competition between specialist agents to write the best application. The fittest agent wins and its lineage evolves.",
+    url: "https://github.com/erozee1/cursor-hands-off",
+    links: [
+      { label: "GitHub", url: "https://github.com/erozee1/cursor-hands-off" },
+    ],
+  },
+  {
     id: "pop-the-bubble-2026-thinkedin",
     title: "Pop the Bubble hackathon",
     date: "2026-06-07",
