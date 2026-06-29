@@ -7,6 +7,20 @@ import type { ManualPost } from "@/types";
 // alongside GitHub activity, writing, research, and LinkedIn posts.
 export const manualPosts: ManualPost[] = [
   {
+    id: "edth-hackathon-2026-win",
+    title: "Won EDTH Hackathon",
+    date: "2026-06-28",
+    type: "achievement",
+    excerpt:
+      "Won EDTH with a mission-planning system that fused live OSINT feeds and spoken field reports into a shared threat map for safer routing.",
+    url: "https://github.com/erozee1/EDTH---Hack",
+    links: [
+      { label: "GitHub", url: "https://github.com/erozee1/EDTH---Hack" },
+      { label: "Live API", url: "https://edth-hack.onrender.com/docs" },
+    ],
+    imageUrl: "/edth-hackathon-win.jpg",
+  },
+  {
     id: "cursor-hands-off-2026-darwn",
     title: "Cursor Hands-Off London hackathon",
     date: "2026-06-25",
