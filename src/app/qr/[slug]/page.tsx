@@ -4,6 +4,8 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { qrDataUrl } from "@/lib/qr";
 import { siteUrl } from "@/lib/site";
+import { deleteCode } from "@/app/qr/actions";
+import DeleteCodeButton from "@/components/DeleteCodeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -65,20 +67,27 @@ export default async function QrDetailPage({
             {shortUrl}
           </p>
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>→ {code.destination_url}</p>
-          <a
-            href={dataUrl}
-            download={`${code.slug}.png`}
-            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium w-fit mt-1"
-            style={{
-              borderColor: "var(--border-strong)",
-              background: "var(--bg-card)",
-              color: "var(--text-primary)",
-              fontFamily: "var(--font-geist-mono)",
-              textDecoration: "none",
-            }}
-          >
-            Download PNG
-          </a>
+          <div className="flex items-center gap-3 mt-1">
+            <a
+              href={dataUrl}
+              download={`${code.slug}.png`}
+              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium w-fit"
+              style={{
+                borderColor: "var(--border-strong)",
+                background: "var(--bg-card)",
+                color: "var(--text-primary)",
+                fontFamily: "var(--font-geist-mono)",
+                textDecoration: "none",
+              }}
+            >
+              Download PNG
+            </a>
+            <DeleteCodeButton
+              action={deleteCode.bind(null, code.id)}
+              label={code.label}
+              className="text-xs hover:underline"
+            />
+          </div>
         </div>
       </div>
 

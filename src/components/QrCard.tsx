@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { qrDataUrl } from "@/lib/qr";
 import { siteUrl } from "@/lib/site";
-import { toggleActive } from "@/app/qr/actions";
+import { toggleActive, deleteCode } from "@/app/qr/actions";
+import DeleteCodeButton from "@/components/DeleteCodeButton";
 
 interface QrCardProps {
   code: {
@@ -79,6 +80,11 @@ export default async function QrCard({ code }: QrCardProps) {
               {code.active ? "disable" : "enable"}
             </button>
           </form>
+          <DeleteCodeButton
+            action={deleteCode.bind(null, code.id)}
+            label={code.label}
+            className="hover:underline"
+          />
         </div>
       </div>
     </div>
