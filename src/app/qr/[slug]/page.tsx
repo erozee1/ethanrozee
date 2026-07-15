@@ -1,0 +1,99 @@
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { supabaseAdmin } from "@/lib/supabase";
+import { qrDataUrl } from "@/lib/qr";
+import { siteUrl } from "@/lib/site";
+
+export const dynamic = "force-dynamic";
+
+export default async function QrDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const supabase = supabaseAdmin();
+
+  const { data: code } = await supabase
+    .from("codes")
+    .select("id, slug, label, destination_url, active, created_at")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!code) notFound();
+
+  const { data: scans } = await supabase
+    .from("scans")
+    .select("id, scanned_at, user_agent, referrer")
+    .eq("code_id", code.id)
+    .order("scanned_at", { ascending: false })
+    .limit(200);
+
+  const shortUrl = `${siteUrl}/r/${code.slug}`;
+  const dataUrl = await qrDataUrl(shortUrl);
+
+  return (
+    <div className="max-w-5xl mx-auto px-6 py-12">
+      <Link
+        href="/qr"
+        className="text-xs mb-6 inline-block"
+        style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}
+      >
+        ← ~/qr
+      </Link>
+
+      <div className="flex flex-col sm:flex-row gap-6 mb-10">
+        <Image
+          src={dataUrl}
+          alt={`QR code for ${code.label}`}
+          width={160}
+          height={160}
+          unoptimized
+          className="rounded shrink-0"
+          style={{ background: "#fff" }}
+        />
+        <div>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
+            {code.label}
+          </h1>
+          <p className="text-xs mb-1" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
+            {shortUrl}
+          </p>
+          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>→ {code.destination_url}</p>
+        </div>
+      </div>
+
+      <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
+        {scans?.length ?? 0} scan{(scans?.length ?? 0) === 1 ? "" : "s"}
+      </h2>
+
+      {!scans || scans.length === 0 ? (
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          No scans yet.
+        </p>
+      ) : (
+        <div className="rounded-lg border overflow-x-auto" style={{ borderColor: "var(--border)" }}>
+          <table className="w-full text-xs" style={{ fontFamily: "var(--font-geist-mono)" }}>
+            <thead>
+              <tr style={{ color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>
+                <th className="text-left px-3 py-2 font-normal">Time</th>
+                <th className="text-left px-3 py-2 font-normal">Referrer</th>
+                <th className="text-left px-3 py-2 font-normal">User agent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scans.map((s) => (
+                <tr key={s.id} style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
+                  <td className="px-3 py-2 whitespace-nowrap">{new Date(s.scanned_at).toLocaleString()}</td>
+                  <td className="px-3 py-2 truncate max-w-[200px]">{s.referrer || "—"}</td>
+                  <td className="px-3 py-2 truncate max-w-[300px]">{s.user_agent || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
