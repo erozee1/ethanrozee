@@ -23,15 +23,19 @@ export default async function QrCard({ code }: QrCardProps) {
       className="rounded-lg border p-4 flex gap-4"
       style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}
     >
-      <Image
-        src={dataUrl}
-        alt={`QR code for ${code.label}`}
-        width={96}
-        height={96}
-        unoptimized
-        className="rounded shrink-0"
-        style={{ background: "#fff" }}
-      />
+      <div
+        className="shrink-0 rounded-md border p-1.5"
+        style={{ borderColor: "var(--border-strong)", background: "#fff" }}
+      >
+        <Image
+          src={dataUrl}
+          alt={`QR code for ${code.label}`}
+          width={80}
+          height={80}
+          unoptimized
+          className="block rounded-sm"
+        />
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
           <Link
@@ -62,11 +66,16 @@ export default async function QrCard({ code }: QrCardProps) {
           <span>
             {code.scanCount} scan{code.scanCount === 1 ? "" : "s"}
           </span>
-          <a href={dataUrl} download={`${code.slug}.png`} style={{ color: "var(--text-muted)" }}>
+          <a
+            href={dataUrl}
+            download={`${code.slug}.png`}
+            className="hover:underline"
+            style={{ color: "var(--text-muted)" }}
+          >
             download
           </a>
           <form action={toggleActive.bind(null, code.id, !code.active)}>
-            <button type="submit" style={{ color: "var(--text-muted)" }}>
+            <button type="submit" className="hover:underline" style={{ color: "var(--text-muted)" }}>
               {code.active ? "disable" : "enable"}
             </button>
           </form>

@@ -44,23 +44,41 @@ export default async function QrDetailPage({
       </Link>
 
       <div className="flex flex-col sm:flex-row gap-6 mb-10">
-        <Image
-          src={dataUrl}
-          alt={`QR code for ${code.label}`}
-          width={160}
-          height={160}
-          unoptimized
-          className="rounded shrink-0"
-          style={{ background: "#fff" }}
-        />
-        <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
+        <div
+          className="shrink-0 rounded-xl border p-4"
+          style={{ borderColor: "var(--border-strong)", background: "#fff" }}
+        >
+          <Image
+            src={dataUrl}
+            alt={`QR code for ${code.label}`}
+            width={176}
+            height={176}
+            unoptimized
+            className="block rounded-md"
+          />
+        </div>
+        <div className="flex flex-col justify-center gap-2">
+          <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
             {code.label}
           </h1>
-          <p className="text-xs mb-1" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
+          <p className="text-xs" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
             {shortUrl}
           </p>
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>→ {code.destination_url}</p>
+          <a
+            href={dataUrl}
+            download={`${code.slug}.png`}
+            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium w-fit mt-1"
+            style={{
+              borderColor: "var(--border-strong)",
+              background: "var(--bg-card)",
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-geist-mono)",
+              textDecoration: "none",
+            }}
+          >
+            Download PNG
+          </a>
         </div>
       </div>
 
