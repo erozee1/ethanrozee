@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
-import { qrDataUrl } from "@/lib/qr";
+import { qrPngDataUrl, qrRoundedSvgDataUrl } from "@/lib/qr";
 import { siteUrl } from "@/lib/site";
-import { deleteCode } from "@/app/qr/actions";
+import { deleteCode, updateDestination } from "@/app/qr/actions";
 import DeleteCodeButton from "@/components/DeleteCodeButton";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,8 @@ export default async function QrDetailPage({
     .limit(200);
 
   const shortUrl = `${siteUrl}/r/${code.slug}`;
-  const dataUrl = await qrDataUrl(shortUrl);
+  const svgUrl = qrRoundedSvgDataUrl(shortUrl);
+  const pngUrl = await qrPngDataUrl(shortUrl);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
@@ -51,7 +52,7 @@ export default async function QrDetailPage({
           style={{ borderColor: "var(--border-strong)", background: "#fff" }}
         >
           <Image
-            src={dataUrl}
+            src={svgUrl}
             alt={`QR code for ${code.label}`}
             width={176}
             height={176}
@@ -66,11 +67,43 @@ export default async function QrDetailPage({
           <p className="text-xs" style={{ color: "var(--text-muted)", fontFamily: "var(--font-geist-mono)" }}>
             {shortUrl}
           </p>
-          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>→ {code.destination_url}</p>
+
+          <form
+            action={updateDestination.bind(null, code.id, code.slug)}
+            className="flex items-center gap-2 mt-1"
+          >
+            <span className="text-xs shrink-0" style={{ color: "var(--text-secondary)" }}>
+              →
+            </span>
+            <input
+              type="url"
+              name="destination_url"
+              defaultValue={code.destination_url}
+              required
+              className="min-w-0 flex-1 rounded-lg border px-2 py-1.5 text-xs outline-none"
+              style={{ borderColor: "var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
+            />
+            <button
+              type="submit"
+              className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium"
+              style={{
+                borderColor: "var(--border-strong)",
+                background: "var(--bg-card)",
+                color: "var(--text-primary)",
+                fontFamily: "var(--font-geist-mono)",
+              }}
+            >
+              Update
+            </button>
+          </form>
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            The QR image never changes — repointing it here is all you need.
+          </p>
+
           <div className="flex items-center gap-3 mt-1">
             <a
-              href={dataUrl}
-              download={`${code.slug}.png`}
+              href={svgUrl}
+              download={`${code.slug}.svg`}
               className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium w-fit"
               style={{
                 borderColor: "var(--border-strong)",
@@ -80,7 +113,15 @@ export default async function QrDetailPage({
                 textDecoration: "none",
               }}
             >
-              Download PNG
+              Download SVG
+            </a>
+            <a
+              href={pngUrl}
+              download={`${code.slug}.png`}
+              className="text-xs hover:underline"
+              style={{ color: "var(--text-muted)" }}
+            >
+              png
             </a>
             <DeleteCodeButton
               action={deleteCode.bind(null, code.id)}

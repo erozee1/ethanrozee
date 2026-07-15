@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { qrDataUrl } from "@/lib/qr";
+import { qrRoundedSvgDataUrl } from "@/lib/qr";
 import { siteUrl } from "@/lib/site";
 import { toggleActive, deleteCode } from "@/app/qr/actions";
 import DeleteCodeButton from "@/components/DeleteCodeButton";
@@ -16,8 +16,8 @@ interface QrCardProps {
   };
 }
 
-export default async function QrCard({ code }: QrCardProps) {
-  const dataUrl = await qrDataUrl(`${siteUrl}/r/${code.slug}`);
+export default function QrCard({ code }: QrCardProps) {
+  const svgUrl = qrRoundedSvgDataUrl(`${siteUrl}/r/${code.slug}`);
 
   return (
     <div
@@ -29,7 +29,7 @@ export default async function QrCard({ code }: QrCardProps) {
         style={{ borderColor: "var(--border-strong)", background: "#fff" }}
       >
         <Image
-          src={dataUrl}
+          src={svgUrl}
           alt={`QR code for ${code.label}`}
           width={80}
           height={80}
@@ -68,8 +68,8 @@ export default async function QrCard({ code }: QrCardProps) {
             {code.scanCount} scan{code.scanCount === 1 ? "" : "s"}
           </span>
           <a
-            href={dataUrl}
-            download={`${code.slug}.png`}
+            href={svgUrl}
+            download={`${code.slug}.svg`}
             className="hover:underline"
             style={{ color: "var(--text-muted)" }}
           >
