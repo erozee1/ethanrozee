@@ -10,6 +10,7 @@ export const linkedInPosts: LinkedInPost[] = [
       "Four days into Antler, we made it official: Steggo joined the programme, with four weeks to turn months of learning into something undeniable.",
     date: "2026-08-27",
     url: "https://www.linkedin.com/feed/update/urn:li:activity:7498707262044131328/",
+    imageUrl: "/antler-logo.png",
   },
   {
     title: "Demonstrated Steggo v0 at EDT Festival in Berlin",
