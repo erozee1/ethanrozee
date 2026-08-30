@@ -53,7 +53,7 @@ export default function ProfileSidebar() {
       </div>
 
       <p className="text-sm leading-relaxed mb-5 text-center md:text-left" style={{ color: "var(--text-secondary)" }}>
-        An Aerospace MEng student trying to find the problem to work on.
+        Founder and engineer building Steggo — wartime decision-making systems, now at Antler.
       </p>
 
       <button

@@ -3,12 +3,12 @@ import type { WorkItem } from "@/types";
 export const workItems: WorkItem[] = [
   {
     id: "founder",
-    name: "Deltar",
-    description: "Founder & CEO. Building The Intelligence Layer for Engineering Change.",
+    name: "Steggo",
+    description: "Founder & engineer. Building wartime decision-making systems, now at Antler.",
     category: "Founder",
     categoryColor: "#F54E00",
-    updatedAt: "2026-04-18",
-    href: "https://www.getdeltar.com",
+    updatedAt: "2026-08-27",
+    href: "https://www.linkedin.com/feed/update/urn:li:activity:7498707262044131328/",
   },
   {
     id: "code-projects",

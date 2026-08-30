@@ -3,7 +3,7 @@ import { GitHubIcon, LinkedInIcon, LinkIcon } from "@/components/icons";
 
 export const badges: Badge[] = [
   { label: "Aerospace MEng", emoji: "🛩️" },
-  { label: "Open to founders", emoji: "🤝" },
+  { label: "Founder & Engineer", emoji: "🦕" },
   { label: "London / Remote", emoji: "📍" },
 ];
 
@@ -15,12 +15,12 @@ export const socialLinks: SocialLink[] = [
   },
   {
     label: "LinkedIn",
-    href: "https://www.linkedin.com/in/ethan-rozee-965997216/",
+    href: "https://www.linkedin.com/in/ethan-rozeee/",
     icon: <LinkedInIcon />,
   },
   {
-    label: "www.getdeltar.com",
-    href: "https://www.getdeltar.com",
+    label: "Steggo at Antler",
+    href: "https://www.linkedin.com/feed/update/urn:li:activity:7498707262044131328/",
     icon: <LinkIcon />,
   },
 ];
