@@ -17,6 +17,16 @@ export const manualPosts: ManualPost[] = [
     links: [{ label: "Steggo", url: "https://www.steggo.ai/" }],
   },
   {
+    id: "antler-backed-2026-steggo",
+    title: "Steggo is officially Antler-backed",
+    date: "2026-09-30",
+    type: "achievement",
+    excerpt:
+      "After the Antler programme, Steggo secured backing from Antler to build radio intelligence for commanders.",
+    url: "https://www.steggo.ai/",
+    imageUrl: "/antler-logo.png",
+  },
+  {
     id: "edth-hackathon-2026-win",
     title: "Won EDTH Hackathon",
     date: "2026-06-28",
