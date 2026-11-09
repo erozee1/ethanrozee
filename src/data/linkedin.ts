@@ -19,11 +19,4 @@ export const linkedInPosts: LinkedInPost[] = [
     date: "2026-08-21",
     url: "https://www.linkedin.com/feed/update/urn:li:activity:7496595566811025408/",
   },
-  {
-    title: "Validated Steggo's direction in Ukraine",
-    excerpt:
-      "Met users and partners in Ukraine, challenged our assumptions, and returned with a sharper direction for Steggo as a wartime decision-making company.",
-    date: "2026-08-11",
-    url: "https://www.linkedin.com/feed/update/urn:li:activity:7492917104002797568/",
-  },
 ];

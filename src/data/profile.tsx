@@ -3,7 +3,7 @@ import { GitHubIcon, LinkedInIcon, LinkIcon } from "@/components/icons";
 
 export const badges: Badge[] = [
   { label: "Aerospace MEng", emoji: "🛩️" },
-  { label: "Founder & Engineer", emoji: "🦕" },
+  { label: "Co-founder, Steggo", emoji: "🦕" },
   { label: "London / Remote", emoji: "📍" },
 ];
 
@@ -19,8 +19,8 @@ export const socialLinks: SocialLink[] = [
     icon: <LinkedInIcon />,
   },
   {
-    label: "Steggo at Antler",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7498707262044131328/",
+    label: "Steggo",
+    href: "https://www.steggo.ai/",
     icon: <LinkIcon />,
   },
 ];

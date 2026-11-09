@@ -7,6 +7,16 @@ import type { ManualPost } from "@/types";
 // alongside GitHub activity, writing, research, and LinkedIn posts.
 export const manualPosts: ManualPost[] = [
   {
+    id: "nfcc-oprr-2026-steggo-demo",
+    title: "Live Steggo demo at the NFCC OPRR Conference",
+    date: "2026-10-08",
+    type: "event",
+    excerpt:
+      "Exhibited Steggo at the National Fire Chiefs Council's Operational Preparedness, Response and Resilience Conference, live-demoing radio intelligence for incident commanders.",
+    url: "https://www.steggo.ai/",
+    links: [{ label: "Steggo", url: "https://www.steggo.ai/" }],
+  },
+  {
     id: "edth-hackathon-2026-win",
     title: "Won EDTH Hackathon",
     date: "2026-06-28",

@@ -18,13 +18,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Ethan Rozee",
-  description: "Aerospace MEng · Builder · Founder — exploring the intersection of engineering and AI.",
+  description: "Co-founder & engineer at Steggo — radio intelligence for commanders. Aerospace MEng · Builder.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "Ethan Rozee",
-    description: "Aerospace MEng · Builder · Founder",
+    description: "Co-founder & engineer at Steggo · Aerospace MEng · Builder",
     type: "website",
     url: "/",
   },

@@ -53,7 +53,7 @@ export default function ProfileSidebar() {
       </div>
 
       <p className="text-sm leading-relaxed mb-5 text-center md:text-left" style={{ color: "var(--text-secondary)" }}>
-        Founder and engineer building Steggo — wartime decision-making systems, now at Antler.
+        Co-founder & engineer at Steggo — radio intelligence for commanders. Turning live radio traffic into one shared, source-linked incident picture. Antler-backed.
       </p>
 
       <button
