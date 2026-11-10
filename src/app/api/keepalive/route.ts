@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-// Hit daily by the Vercel cron in vercel.json. Supabase pauses Free plan
+// Hit daily by the Vercel schedule in vercel.json. Supabase pauses Free plan
 // projects after ~7 days without database activity, which would 404 every
 // printed QR code, so this runs one real query a day to count as activity.
-// Vercel sends `Authorization: Bearer $CRON_SECRET` on cron invocations.
+// Vercel sends `Authorization: Bearer $CRON_SECRET` on scheduled runs.
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
